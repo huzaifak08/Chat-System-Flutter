@@ -1,3 +1,6 @@
+import 'package:chat_system/helper/helper_function.dart';
+import 'package:chat_system/pages/home_page.dart';
+import 'package:chat_system/services/auth_service.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -15,6 +18,8 @@ class _RegisterPageState extends State<RegisterPage> {
   String email = '';
   String password = '';
   String fullName = '';
+  bool _isLoading = false;
+  AuthService authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -119,10 +124,15 @@ class _RegisterPageState extends State<RegisterPage> {
                     onPressed: () {
                       register();
                     },
-                    child: const Text(
-                      'Register',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
+                    child: _isLoading
+                        ? const Center(
+                            child:
+                                CircularProgressIndicator(color: Colors.white),
+                          )
+                        : const Text(
+                            'Register',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -148,7 +158,31 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  register() {
-    if (formKey.currentState!.validate()) {}
+  register() async {
+    if (formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      authService
+          .registerWithEmailAndPassword(fullName, email, password)
+          .then((value) async {
+        if (value == true) {
+          // saving the shared Preferences state:
+
+          await HelperFunction.saveUserLoggedInStatus(true);
+          await HelperFunction.saveUserNameSF(fullName);
+          await HelperFunction.saveUSerEmailSF(email);
+
+          nextScreenReplace(context, HomePage());
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+
+          toastMessage('The error you got is $value');
+        }
+      });
+    }
   }
 }

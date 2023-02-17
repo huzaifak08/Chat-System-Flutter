@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 const textInputDecoration = InputDecoration(
   focusedBorder: OutlineInputBorder(
@@ -16,4 +17,29 @@ void nextScreen(context, page) {
 void nextScreenReplace(context, page) {
   Navigator.pushReplacement(
       context, MaterialPageRoute(builder: (context) => page));
+}
+
+void toastMessage(String message) {
+  Fluttertoast.showToast(
+    msg: message,
+    toastLength: Toast.LENGTH_SHORT,
+    gravity: ToastGravity.BOTTOM,
+    timeInSecForIosWeb: 5,
+    backgroundColor: Color(0xFFee7b64),
+    textColor: Colors.white,
+    fontSize: 16.0,
+  );
+}
+
+void showSnackBar(context, color, message) {
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    content: Text(message),
+    backgroundColor: color,
+    duration: const Duration(seconds: 3),
+    action: SnackBarAction(
+      label: 'OK',
+      onPressed: () {},
+      textColor: Colors.white,
+    ),
+  ));
 }
