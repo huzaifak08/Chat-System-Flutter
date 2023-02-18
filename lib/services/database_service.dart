@@ -23,4 +23,12 @@ class DatabaseService {
       "password": password
     });
   }
+
+  // Saving the User Data:
+  Future gettingUserData(String email) async {
+    QuerySnapshot snapshot =
+        await usersCollection.where('email', isEqualTo: email).get();
+
+    return snapshot;
+  }
 }

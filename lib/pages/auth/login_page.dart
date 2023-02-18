@@ -1,6 +1,11 @@
+import 'package:chat_system/helper/helper_function.dart';
 import 'package:chat_system/pages/auth/register_page.dart';
+import 'package:chat_system/pages/home_page.dart';
+import 'package:chat_system/services/auth_service.dart';
+import 'package:chat_system/services/database_service.dart';
 import 'package:chat_system/widgets/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -15,6 +20,8 @@ class _LoginPageState extends State<LoginPage> {
   final formKey = GlobalKey<FormState>();
   String email = '';
   String password = '';
+  bool _isLoading = false;
+  AuthService authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -28,12 +35,12 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
+                const Text(
                   'Groupie',
                   style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 10),
-                Text('Login to see what they are talking!',
+                const SizedBox(height: 10),
+                const Text('Login to see what they are talking!',
                     style:
                         TextStyle(fontSize: 15, fontWeight: FontWeight.w400)),
                 Image.asset('assets/login.png'),
@@ -83,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
                     }
                   },
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -96,27 +103,36 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: () {
                       login();
                     },
-                    child: const Text(
-                      'Sign In',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
+                    child: _isLoading
+                        ? const Center(
+                            child:
+                                CircularProgressIndicator(color: Colors.white),
+                          )
+                        : const Text(
+                            'Sign In',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 10),
-                Text.rich(TextSpan(
+                Text.rich(
+                  TextSpan(
                     text: "Don't have an account? ",
-                    style: TextStyle(color: Colors.black, fontSize: 14),
+                    style: const TextStyle(color: Colors.black, fontSize: 14),
                     children: [
                       TextSpan(
-                          text: 'Create account',
-                          style: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                              decoration: TextDecoration.underline),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              nextScreen(context, RegisterPage());
-                            }),
-                    ]))
+                        text: 'Create account',
+                        style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            decoration: TextDecoration.underline),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            nextScreen(context, const RegisterPage());
+                          },
+                      ),
+                    ],
+                  ),
+                )
               ],
             ),
           ),
@@ -126,6 +142,35 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   login() {
-    if (formKey.currentState!.validate()) {}
+    if (formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      authService
+          .loginWithEmailAndPassword(email, password)
+          .then((value) async {
+        if (value == true) {
+          QuerySnapshot snapshot =
+              await DatabaseService(uid: FirebaseAuth.instance.currentUser!.uid)
+                  .gettingUserData(email);
+
+          // Saving the user data in Shared Preferences:
+          await HelperFunction.saveUserLoggedInStatus(true);
+          await HelperFunction.saveUSerEmailSF(email);
+          await HelperFunction.saveUserNameSF(snapshot.docs[0]['fullName']);
+
+          toastMessage("Welcome to the APP ${snapshot.docs[0]['fullName']}");
+
+          nextScreenReplace(context, const HomePage());
+        } else {
+          showSnackBar(context, Colors.red, value);
+
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      });
+    }
   }
 }

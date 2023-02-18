@@ -147,7 +147,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               decoration: TextDecoration.underline),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
-                              nextScreen(context, RegisterPage());
+                              nextScreen(context, const RegisterPage());
                             }),
                     ]))
               ],
@@ -158,7 +158,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  register() async {
+  register() {
     if (formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
