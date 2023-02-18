@@ -3,7 +3,10 @@ import 'package:chat_system/pages/auth/login_page.dart';
 import 'package:chat_system/pages/profile_page.dart';
 import 'package:chat_system/pages/search_page.dart';
 import 'package:chat_system/services/auth_service.dart';
+import 'package:chat_system/services/database_service.dart';
 import 'package:chat_system/widgets/widgets.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,6 +19,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   String email = '';
   String userName = '';
+  Stream? groups;
   AuthService authService = AuthService();
 
   @override
@@ -34,6 +38,15 @@ class _HomePageState extends State<HomePage> {
     await HelperFunction.gettingUserNameFromSF().then((value) {
       setState(() {
         userName = value!;
+      });
+    });
+
+    // getting the list of snapshots in our streams:
+    await DatabaseService(uid: FirebaseAuth.instance.currentUser!.uid)
+        .getUserGroups()
+        .then((snapshot) {
+      setState(() {
+        groups = snapshot;
       });
     });
   }
@@ -95,7 +108,12 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               onTap: () {
-                nextScreen(context, const ProfilePage());
+                nextScreenReplace(
+                    context,
+                    ProfilePage(
+                      userName: userName,
+                      email: email,
+                    ));
               },
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
@@ -147,6 +165,70 @@ class _HomePageState extends State<HomePage> {
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
               leading: const Icon(Icons.exit_to_app),
               title: const Text('Logout'),
+            ),
+          ],
+        ),
+      ),
+      body: groupList(),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Theme.of(context).primaryColor,
+        onPressed: () {},
+        child: const Icon(
+          Icons.add,
+          size: 30,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  popUpDialog(BuildContext context) {}
+
+  groupList() {
+    return StreamBuilder(
+      stream: groups,
+      builder: (context, AsyncSnapshot snapshot) {
+        if (snapshot.hasData) {
+          if (snapshot.data['groups'] != null) {
+            if (snapshot.data['groups'].length != 0) {
+              return Text('Hello');
+            } else {
+              return noGroupWidget();
+            }
+          } else {
+            return noGroupWidget();
+          }
+        } else {
+          return Center(
+            child: CircularProgressIndicator(
+                color: Theme.of(context).primaryColor),
+          );
+        }
+      },
+    );
+  }
+
+  noGroupWidget() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 25),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: () {
+                popUpDialog(context);
+              },
+              child: Icon(
+                Icons.add_circle,
+                color: Colors.grey[700],
+                size: 75,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              "You've not joined any groups, tap on the add icon to create a group or also search from the top search button.",
+              textAlign: TextAlign.center,
             ),
           ],
         ),
