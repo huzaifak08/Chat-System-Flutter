@@ -4,9 +4,9 @@ import 'package:chat_system/pages/profile_page.dart';
 import 'package:chat_system/pages/search_page.dart';
 import 'package:chat_system/services/auth_service.dart';
 import 'package:chat_system/services/database_service.dart';
+import 'package:chat_system/widgets/group_tile.dart';
 import 'package:chat_system/widgets/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -20,6 +20,8 @@ class _HomePageState extends State<HomePage> {
   String email = '';
   String userName = '';
   Stream? groups;
+  bool _isLoading = false;
+  String groupName = '';
   AuthService authService = AuthService();
 
   @override
@@ -49,6 +51,15 @@ class _HomePageState extends State<HomePage> {
         groups = snapshot;
       });
     });
+  }
+
+  // string manipulation
+  String getId(String res) {
+    return res.substring(0, res.indexOf("_"));
+  }
+
+  String getName(String res) {
+    return res.substring(res.indexOf("_") + 1);
   }
 
   @override
@@ -172,7 +183,9 @@ class _HomePageState extends State<HomePage> {
       body: groupList(),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Theme.of(context).primaryColor,
-        onPressed: () {},
+        onPressed: () {
+          popUpDialog(context);
+        },
         child: const Icon(
           Icons.add,
           size: 30,
@@ -182,7 +195,79 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  popUpDialog(BuildContext context) {}
+  popUpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text(
+                'Create a group',
+                textAlign: TextAlign.left,
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _isLoading
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        )
+                      : TextField(
+                          onChanged: (value) {
+                            setState(() {
+                              groupName = value;
+                            });
+                          },
+                          decoration: textInputDecoration,
+                        ),
+                ],
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor),
+                  child: const Text('CANCEL'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (groupName != null) {
+                      setState(() {
+                        _isLoading = true;
+                      });
+
+                      DatabaseService(
+                              uid: FirebaseAuth.instance.currentUser!.uid)
+                          .createGroup(userName,
+                              FirebaseAuth.instance.currentUser!.uid, groupName)
+                          .whenComplete(() {
+                        setState(() {
+                          _isLoading = false;
+                        });
+
+                        Navigator.of(context).pop();
+                        showSnackBar(context, Colors.green,
+                            'Group Created Successfully');
+                      });
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor),
+                  child: const Text('CREATE'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   groupList() {
     return StreamBuilder(
@@ -191,7 +276,17 @@ class _HomePageState extends State<HomePage> {
         if (snapshot.hasData) {
           if (snapshot.data['groups'] != null) {
             if (snapshot.data['groups'].length != 0) {
-              return Text('Hello');
+              return ListView.builder(
+                itemCount: snapshot.data['groups'].length,
+                itemBuilder: (context, index) {
+                  int reverseIndex = snapshot.data['groups'].length - index - 1;
+                  return GroupTile(
+                      userName: snapshot.data['fullName'],
+                      groupId: getId(snapshot.data['groups'][reverseIndex]),
+                      groupName:
+                          getName(snapshot.data['groups'][reverseIndex]));
+                },
+              );
             } else {
               return noGroupWidget();
             }
