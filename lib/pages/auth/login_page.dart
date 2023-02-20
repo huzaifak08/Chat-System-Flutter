@@ -52,6 +52,8 @@ class _LoginPageState extends State<LoginPage> {
                       color: Theme.of(context).primaryColor,
                     ),
                   ),
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
                   onChanged: (value) {
                     setState(() {
                       email = value;

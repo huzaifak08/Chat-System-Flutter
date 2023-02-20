@@ -50,6 +50,8 @@ class _RegisterPageState extends State<RegisterPage> {
                       color: Theme.of(context).primaryColor,
                     ),
                   ),
+                  keyboardType: TextInputType.name,
+                  textInputAction: TextInputAction.next,
                   onChanged: (value) {
                     setState(() {
                       fullName = value;
@@ -73,6 +75,8 @@ class _RegisterPageState extends State<RegisterPage> {
                       color: Theme.of(context).primaryColor,
                     ),
                   ),
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
                   onChanged: (value) {
                     setState(() {
                       email = value;
@@ -111,7 +115,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     }
                   },
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -174,7 +178,7 @@ class _RegisterPageState extends State<RegisterPage> {
           await HelperFunction.saveUserNameSF(fullName);
           await HelperFunction.saveUSerEmailSF(email);
 
-          nextScreenReplace(context, HomePage());
+          nextScreenReplace(context, const HomePage());
         } else {
           setState(() {
             _isLoading = false;
