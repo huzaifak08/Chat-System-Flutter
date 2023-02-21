@@ -1,4 +1,5 @@
 import 'package:chat_system/helper/helper_function.dart';
+import 'package:chat_system/pages/auth/login_page.dart';
 import 'package:chat_system/pages/home_page.dart';
 import 'package:chat_system/services/auth_service.dart';
 import 'package:flutter/gestures.dart';
@@ -142,7 +143,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 10),
                 Text.rich(TextSpan(
                     text: "Already have an account? ",
-                    style: TextStyle(color: Colors.black, fontSize: 14),
+                    style: const TextStyle(color: Colors.black, fontSize: 14),
                     children: [
                       TextSpan(
                           text: 'Sign In',
@@ -151,7 +152,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               decoration: TextDecoration.underline),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
-                              nextScreen(context, const RegisterPage());
+                              nextScreen(context, const LoginPage());
                             }),
                     ]))
               ],
